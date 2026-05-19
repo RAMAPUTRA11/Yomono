@@ -3,23 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductVariant extends Model
 {
-    protected $fillable = [
-        'product_id', 
-        'color_id', 
-        'size_id', 
-        'stock', 
-        'image'
-    ];
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 
-    public function color(): BelongsTo {
+    public function color()
+    {
         return $this->belongsTo(Color::class);
     }
 
-    public function size(): BelongsTo {
+    public function size()
+    {
         return $this->belongsTo(Size::class);
     }
 }

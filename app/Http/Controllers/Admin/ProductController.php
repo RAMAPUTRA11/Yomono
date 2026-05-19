@@ -45,34 +45,45 @@ class ProductController extends Controller
      */
     public function shop()
     {
-        $categories = Category::all();
-        $query = Product::with(['category', 'variants']);
+    $categories = Category::all();
+    $query = Product::with(['category', 'variants']);
 
-        // Filter Kategori
-        if (request('category')) {
-            $query->whereHas('category', function($q) {
-                $q->where('slug', request('category'));
-            });
-        }
+    // --- FITUR BARU: Filter Collection (Koleksi Terbaru) ---
+    if (request('collection') && request('collection') != 'all categories') {
+        $query->where('collection_name', request('collection'));
+    }
 
-        // Filter Stok
-        if (request('availability') == 'in_stock') {
-            $query->whereHas('variants', function($q) { $q->where('stock', '>', 0); });
-        } elseif (request('availability') == 'out_of_stock') {
-            $query->whereDoesntHave('variants', function($q) { $q->where('stock', '>', 0); });
-        }
+    // Filter Kategori (Tetap Aman)
+    if (request('category')) {
+        $query->whereHas('category', function($q) {
+            $q->where('slug', request('category'));
+        });
+    }
 
-        // Sorting
-        switch (request('sort')) {
-            case 'price-asc': $query->orderBy('price', 'asc'); break;
-            case 'price-desc': $query->orderBy('price', 'desc'); break;
-            case 'alphabet-asc': $query->orderBy('name', 'asc'); break;
-            case 'alphabet-desc': $query->orderBy('name', 'desc'); break;
-            default: $query->latest(); break;
-        }
+    // Filter Stok (Tetap Aman)
+    if (request('availability') == 'in_stock') {
+        $query->whereHas('variants', function($q) { 
+            $q->where('stock', '>', 0); 
+        });
+    } elseif (request('availability') == 'out_of_stock') {
+        $query->whereDoesntHave('variants', function($q) { 
+            $q->where('stock', '>', 0); 
+        });
+    }
 
-        $products = $query->get();
-        return view('shop', compact('products', 'categories'));
+    // Sorting (Tetap Aman)
+    switch (request('sort')) {
+        case 'price-asc': $query->orderBy('price', 'asc'); break;
+        case 'price-desc': $query->orderBy('price', 'desc'); break;
+        case 'alphabet-asc': $query->orderBy('name', 'asc'); break;
+        case 'alphabet-desc': $query->orderBy('name', 'desc'); break;
+        default: $query->latest(); break;
+    }
+
+    $products = $query->get();
+    
+    // Pastikan view-nya mengarah ke 'pages.shop' jika filenya ada di folder pages
+    return view('shop', compact('products', 'categories'));
     }
 
     /**

@@ -81,19 +81,29 @@ Route::get('/api/search-suggestions', function (Request $request) {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
+    // --- CART SYSTEM ---
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
     
-    Route::post('/checkout', [OrderController::class, 'checkout'])->name('checkout');
+    // Perbaikan: Tambahkan route Update dan Remove (Wajib ada untuk fitur di halaman cart)
+    Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+
+    // --- CHECKOUT & ORDERS ---
+    // Perbaikan: Checkout biasanya GET untuk menampilkan form, dan POST untuk proses pesanan
+    Route::get('/checkout', [OrderController::class, 'index'])->name('checkout'); 
+    Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
+    
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('order.show');
 
+    // --- PAYMENT ---
     Route::get('/payment/upload/{orderId}', [PaymentController::class, 'showUploadForm'])->name('payment.upload');
     Route::post('/payment/store', [PaymentController::class, 'store'])->name('payment.store');
 
+    // --- REVIEWS ---
     Route::post('/review/store', [ReviewController::class, 'store'])->name('review.store');
 });
-
 /*
 |--------------------------------------------------------------------------
 | Admin Routes

@@ -7,6 +7,7 @@ use App\Models\Cart;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -68,26 +69,36 @@ class AuthController extends Controller
     // Logika untuk menangani Buy It Now yang disimpan di session
     protected function handlePendingPurchase()
     {
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('home');
+        }
+
+        // 1. Cek apakah ada data "Buy Now" di session
         if (session()->has('pending_buy_now')) {
             $data = session()->get('pending_buy_now');
 
             // Masukkan ke database cart
             Cart::updateOrCreate(
                 [
-                    'user_id' => Auth::id(),
+                    'user_id' => $user->id,
                     'product_variant_id' => $data['product_variant_id']
                 ],
-                ['quantity' => $data['quantity']]
+                [
+                    // Jika data baru dibuat, gunakan qty session. Jika update, tambah qty yang sudah ada.
+                    'quantity' => DB::raw("COALESCE(quantity, 0) + " . (int)$data['quantity'])
+                ]
             );
 
             session()->forget('pending_buy_now');
             
-            // Langsung arahkan ke halaman cart/checkout
-            return redirect()->route('cart.index')->with('success', 'Akun berhasil dibuat dan produk ditambahkan ke keranjang!');
+            return redirect()->route('cart.index')
+                ->with('success', 'Produk berhasil ditambahkan ke keranjang!');
         }
 
-        // Jika tidak ada pending purchase, ke home atau dashboard admin
-        if (Auth::user()->role === 'admin') {
+        // 2. Jika tidak ada pending purchase, arahkan berdasarkan role
+        if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
 
@@ -103,43 +114,41 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-    public function redirectToGoogle() {
-    return Socialite::driver('google')->redirect();
+    // --- GOOGLE OAUTH ---
 
+    public function redirectToGoogle() 
+    {
+        return Socialite::driver('google')->redirect();
     }
 
     public function handleGoogleCallback()
     {
-    try {
-        $googleUser = Socialite::driver('google')->user();
-        
-        // Debug: Un-comment baris di bawah kalau mau lihat data dari Google masuk atau gak
-        // dd($googleUser); 
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            
+            $user = User::where('email', $googleUser->email)->first();
 
-        $user = User::where('email', $googleUser->email)->first();
+            if ($user) {
+                // Update jika user sudah ada tapi belum punya google_id
+                $user->update(['google_id' => $googleUser->id]);
+                Auth::login($user);
+            } else {
+                // Buat user baru
+                $user = User::create([
+                    'name'      => $googleUser->name,
+                    'email'     => $googleUser->email,
+                    'google_id' => $googleUser->id,
+                    'password'  => null, 
+                    'role'      => 'customer',
+                ]);
+                Auth::login($user);
+            }
 
-        if ($user) {
-            // Update jika user sudah ada tapi belum punya google_id
-            $user->update(['google_id' => $googleUser->id]);
-            Auth::login($user);
-        } else {
-            // Buat user baru
-            $user = User::create([
-                'name'      => $googleUser->name,
-                'email'     => $googleUser->email,
-                'google_id' => $googleUser->id,
-                'password'  => null, // Password kosong karena login sosial
-                'role'      => 'customer',
-            ]);
-            Auth::login($user);
+            // PERBAIKAN: Gunakan handlePendingPurchase agar produk Buy Now masuk ke Cart
+            return $this->handlePendingPurchase();
+
+        } catch (\Exception $e) {
+            return "Login Error: " . $e->getMessage();
         }
-
-        return redirect()->route('shop');
-
-    } catch (\Exception $e) {
-        // TAMPILKAN ERROR NYATA (Penting untuk tahu kenapa data gak masuk)
-        dd($e->getMessage()); 
     }
-    }
-
-    }
+}

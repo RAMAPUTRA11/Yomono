@@ -61,10 +61,10 @@
             </div>
 
             <nav class="hidden lg:flex space-x-10 text-[11px] font-medium uppercase tracking-[0.15em] text-gray-700 items-center">
-                <a href="{{ url('/shop?collection=new-blueprint') }}" class="nav-link hover:text-black transition">New Blueprint</a>
-                <a href="{{ url('/shop?collection=overlock-2.0') }}" class="nav-link hover:text-black transition">Overlock 2.0</a>
-                <a href="{{ url('/shop?collection=anytime-2.0') }}" class="nav-link hover:text-black transition">Anytime 2.0</a>
-                
+                <a href="{{ url('/shop?collection=new Artikel') }}" class="nav-link hover:text-black transition">New Artikel</a>
+                <a href="{{ url('/shop?collection=Best in 2026') }}" class="nav-link hover:text-black transition">Best in 2026</a>
+                <a href="{{ url('/shop?collection=all categories') }}" class="nav-link hover:text-black transition">All Categories</a>
+
                 <div class="relative h-20 flex items-center" @mouseenter="shopMenu = true" @mouseleave="shopMenu = false">
                     <a href="{{ url('/shop') }}" class="nav-link hover:text-black transition py-2" :class="{ 'active-link': shopMenu }">Shop</a>
 
@@ -77,9 +77,29 @@
                             <div>
                                 <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">COLLECTIONS</h4>
                                 <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
-                                    <li><a href="{{ url('/shop?collection=april-picks') }}" class="hover:text-black transition">April Picks</a></li>
-                                    <li><a href="{{ url('/shop?collection=kartinis-day') }}" class="hover:text-black transition">Kartini's Day</a></li>
-                                    <li><a href="{{ url('/shop?collection=blueprint') }}" class="hover:text-black transition">BLUEPRINT</a></li>
+                                    @php
+                                        // Gunakan groupBy sebagai pengganti distinct agar tetap bisa order by created_at
+                                        $collections = \App\Models\Product::select('collection_name', \DB::raw('MAX(created_at) as last_created'))
+                                                        ->whereNotNull('collection_name')
+                                                        ->groupBy('collection_name')
+                                                        ->orderBy('last_created', 'desc')
+                                                        ->take(4)
+                                                        ->get();
+                                    @endphp
+
+                                    @foreach($collections as $col)
+                                        <li>
+                                            <a href="{{ route('shop', ['collection' => $col->collection_name]) }}" 
+                                            class="hover:text-black transition uppercase">
+                                                {{ $col->collection_name }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+
+                                    {{-- Fallback jika database kosong --}}
+                                    @if($collections->isEmpty())
+                                        <li><a href="{{ route('shop') }}" class="hover:text-black transition uppercase">New Arrivals</a></li>
+                                    @endif
                                 </ul>
                             </div>
                             <div>
@@ -112,7 +132,17 @@
             </nav>
 
             <div class="flex items-center space-x-6 text-gray-800">
-                <a href="{{ route('login') }}" class="text-[11px] uppercase tracking-widest hidden sm:block font-medium nav-link">Account</a>
+                @auth
+                    <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('home') }}" 
+                    class="hover:text-gray-600 transition uppercase font-bold">
+                        {{ Auth::user()->name }}
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" 
+                    class="hover:text-gray-600 transition uppercase">
+                        ACCOUNT
+                    </a>
+                @endauth
                 <button @click="searchOpen = true" class="hover:text-black transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </button>

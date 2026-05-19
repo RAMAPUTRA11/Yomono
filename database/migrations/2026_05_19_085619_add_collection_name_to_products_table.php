@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('google_id')->nullable()->after('id');
-            $table->string('password')->nullable()->change();
-        });
+    Schema::table('products', function (Blueprint $table) {
+        // Kita tambahkan kolom collection_name setelah kolom 'name' atau sesuai keinginan
+        $table->string('collection_name')->nullable()->after('name');
+    });
     }
 
     /**
@@ -22,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+    Schema::table('products', function (Blueprint $table) {
+        $table->dropColumn('collection_name');
+    });
     }
 };

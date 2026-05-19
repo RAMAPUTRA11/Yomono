@@ -9,67 +9,98 @@ use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
+    /**
+     * Menampilkan halaman keranjang belanja
+     */
     public function index()
     {
-        $cartItems = Cart::with('variant.product')
-            ->where('user_id', Auth::id())
-            ->get();
+        // Tetap menggunakan Auth::id() agar editor bersih dari garis merah
+        $userId = Auth::id();
 
-        return view('user.cart', compact('cartItems'));
+        // Eager loading sangat penting agar harga & varian muncul di Blade
+        $cartItems = Cart::with(['variant.product', 'variant.color', 'variant.size'])
+        ->where('user_id', Auth::id())
+        ->get();
+
+    return view('user.cart', compact('cartItems'));
     }
 
+    /**
+     * Menambah item ke keranjang
+     */
     public function addToCart(Request $request)
     {
-        // 1. Validasi Input Dasar
         $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'color'      => 'required',
-            'size'       => 'required',
+            'variant_id' => 'required|exists:product_variants,id',
             'quantity'   => 'required|integer|min:1'
         ]);
 
-        // 2. Cari Variant ID berdasarkan kombinasi Product, Color, dan Size
-        $variant = ProductVariant::where('product_id', $request->product_id)
-            ->where('color', $request->color)
-            ->where('size', $request->size)
-            ->first();
-
-        if (!$variant) {
-            return redirect()->back()->with('error', 'Kombinasi warna dan ukuran tidak tersedia.');
-        }
-
-        // 3. LOGIKA BUY IT NOW (Jika user belum login)
-        if ($request->has('buy_now') && !Auth::check()) {
-            // Simpan pilihan ke session agar setelah login/register bisa diproses
-            session(['pending_buy_now' => [
-                'product_variant_id' => $variant->id,
-                'quantity' => $request->quantity
-            ]]);
-            return redirect()->route('register')->with('info', 'Silahkan buat akun untuk melanjutkan pembelian.');
-        }
-
-        // Jika klik Buy It Now dan sudah login, bisa langsung redirect ke checkout
-        if ($request->has('buy_now') && Auth::check()) {
-             // Kamu bisa sesuaikan ini ke route checkoutmu
-             return redirect()->route('checkout', [
-                 'variant_id' => $variant->id, 
-                 'qty' => $request->quantity
-             ]);
-        }
-
-        // 4. LOGIKA ADD TO CART (Wajib Login)
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Silahkan login terlebih dahulu.');
+            return redirect()->route('login')->with('error', 'Please login to continue.');
         }
 
-        Cart::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'product_variant_id' => $variant->id
-            ],
-            ['quantity' => $request->quantity]
-        );
+        // Cek stok yang tersedia sebelum menambahkan
+        $variant = ProductVariant::findOrFail($request->variant_id);
+        if ($variant->stock < $request->quantity) {
+            return redirect()->back()->with('error', 'Sorry, insufficient stock available.');
+        }
 
-        return redirect()->back()->with('success', 'Berhasil ditambahkan ke keranjang!');
+        // Cari item yang sudah ada di keranjang
+        $cart = Cart::where('user_id', Auth::id())
+                    ->where('product_variant_id', $request->variant_id)
+                    ->first();
+
+        if ($cart) {
+            // Cek jika penambahan melebihi stok
+            if (($cart->quantity + $request->quantity) > $variant->stock) {
+                return redirect()->back()->with('error', 'Cannot add more. Total in cart exceeds available stock.');
+            }
+            $cart->increment('quantity', $request->quantity);
+        } else {
+            Cart::create([
+                'user_id' => Auth::id(),
+                'product_variant_id' => $request->variant_id,
+                'quantity' => $request->quantity
+            ]);
+        }
+
+        if ($request->has('buy_now')) {
+            return redirect()->route('cart.index');
+        }
+
+        return redirect()->back()->with('success', 'Product added to cart!');
+    }
+
+    /**
+     * Update jumlah quantity (Plus/Minus)
+     */
+    public function update(Request $request, $id)
+    {
+        // Pastikan item milik user yang sedang login
+        $cartItem = Cart::with('variant')->where('user_id', Auth::id())->findOrFail($id);
+        
+        if ($request->action == 'increase') {
+            // Validasi stok saat tombol + diklik
+            if ($cartItem->quantity < $cartItem->variant->stock) {
+                $cartItem->increment('quantity');
+            } else {
+                return redirect()->back()->with('error', 'Maximum stock reached.');
+            }
+        } elseif ($request->action == 'decrease' && $cartItem->quantity > 1) {
+            $cartItem->decrement('quantity');
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * Menghapus item dari keranjang
+     */
+    public function remove($id)
+    {
+        // Gunakan delete() pada hasil query yang sudah difilter user_id
+        Cart::where('user_id', Auth::id())->where('id', $id)->delete();
+        
+        return redirect()->back()->with('success', 'Item removed from cart.');
     }
 }
