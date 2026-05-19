@@ -166,10 +166,68 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Logika update bisa dikembangkan di sini
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diupdate');
-    }
+    $request->validate([
+        'name'        => 'required|string|max:255',
+        'category_id' => 'required|exists:categories,id',
+        'price'       => 'required|numeric',
+        'main_image'  => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        'variants'    => 'required|array|min:1',
+        'variants.*.color_id' => 'required|exists:colors,id',
+        'variants.*.sizes'    => 'required|array',
+        'variants.*.stocks'   => 'required|array',
+    ]);
 
+    $product = Product::findOrFail($id);
+
+    try {
+        DB::transaction(function () use ($request, $product) {
+            // 1. Update Data Utama Produk
+            $productData = [
+                'category_id' => $request->category_id,
+                'name'        => $request->name,
+                'slug'        => \Illuminate\Support\Str::slug($request->name),
+                'price'       => $request->price,
+                'description' => $request->description ?? '-',
+            ];
+
+            // Jika ada gambar utama baru
+            if ($request->hasFile('main_image')) {
+                if ($product->image) {
+                    Storage::disk('public')->delete($product->image);
+                }
+                $productData['image'] = $request->file('main_image')->store('products/main', 'public');
+            }
+
+            $product->update($productData);
+
+            // 2. Kelola Varian (Hapus yang lama, simpan yang baru)
+            // Catatan: Jika ingin lebih advance, Anda bisa mencocokkan ID agar tidak menghapus gambar
+            $product->variants()->delete(); 
+
+            foreach ($request->variants as $vData) {
+                // Tentukan gambar varian (default ke gambar utama produk)
+                $vImagePath = $product->image;
+
+                if (isset($vData['image']) && $vData['image'] instanceof \Illuminate\Http\UploadedFile) {
+                    $vImagePath = $vData['image']->store('products/variants', 'public');
+                }
+
+                foreach ($vData['sizes'] as $sKey => $sizeId) {
+                    $product->variants()->create([
+                        'color_id' => $vData['color_id'],
+                        'size_id'  => $sizeId,
+                        'stock'    => $vData['stocks'][$sKey] ?? 0,
+                        'image'    => $vImagePath,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diupdate!');
+    } catch (\Exception $e) {
+        return redirect()->back()->withInput()->with('error', 'Gagal update: ' . $e->getMessage());
+    }
+    }
     /**
      * Hapus Produk
      */

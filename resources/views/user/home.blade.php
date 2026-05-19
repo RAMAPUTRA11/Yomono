@@ -90,10 +90,10 @@
                     <span class="bg-white text-black px-8 py-3 text-xs uppercase tracking-[0.3em] font-medium group-hover:bg-black group-hover:text-white transition">Tops</span>
                 </div>
             </a>
-            <a href="/shop?category=bottoms" class="relative aspect-[4/5] group overflow-hidden">
+            <a href="/shop?category=pants" class="relative aspect-[4/5] group overflow-hidden">
                 <img src="/storage/aset/frame2.jpeg" class="w-full h-full object-cover group-hover:scale-110 transition duration-1000">
                 <div class="absolute inset-0 bg-black/10 flex items-center justify-center">
-                    <span class="bg-white text-black px-8 py-3 text-xs uppercase tracking-[0.3em] font-medium group-hover:bg-black group-hover:text-white transition">Bottoms</span>
+                    <span class="bg-white text-black px-8 py-3 text-xs uppercase tracking-[0.3em] font-medium group-hover:bg-black group-hover:text-white transition">Pants</span>
                 </div>
             </a>
             <a href="/shop?category=outerwear" class="relative aspect-[4/5] group overflow-hidden">

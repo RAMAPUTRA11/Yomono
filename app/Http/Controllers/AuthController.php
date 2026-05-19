@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Cart;
+use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -101,4 +102,44 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         return redirect('/');
     }
-}
+
+    public function redirectToGoogle() {
+    return Socialite::driver('google')->redirect();
+
+    }
+
+    public function handleGoogleCallback()
+    {
+    try {
+        $googleUser = Socialite::driver('google')->user();
+        
+        // Debug: Un-comment baris di bawah kalau mau lihat data dari Google masuk atau gak
+        // dd($googleUser); 
+
+        $user = User::where('email', $googleUser->email)->first();
+
+        if ($user) {
+            // Update jika user sudah ada tapi belum punya google_id
+            $user->update(['google_id' => $googleUser->id]);
+            Auth::login($user);
+        } else {
+            // Buat user baru
+            $user = User::create([
+                'name'      => $googleUser->name,
+                'email'     => $googleUser->email,
+                'google_id' => $googleUser->id,
+                'password'  => null, // Password kosong karena login sosial
+                'role'      => 'customer',
+            ]);
+            Auth::login($user);
+        }
+
+        return redirect()->route('shop');
+
+    } catch (\Exception $e) {
+        // TAMPILKAN ERROR NYATA (Penting untuk tahu kenapa data gak masuk)
+        dd($e->getMessage()); 
+    }
+    }
+
+    }
