@@ -7,6 +7,7 @@ use App\Models\{Product, Category, Color, Size, ProductVariant};
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\{Storage, DB};
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -91,64 +92,62 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name'          => 'required|string|max:255',
-            'category_id'   => 'required|exists:categories,id',
-            'price'         => 'required|numeric',
-            'main_image'    => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'variants'      => 'required|array|min:1',
-            'variants.*.color_id' => 'required|exists:colors,id',
-            'variants.*.sizes'    => 'required|array',
-            'variants.*.stocks'   => 'required|array',
-        ]);
+    // 1. Validasi (tambahkan collection_name)
+    $request->validate([
+        'name'            => 'required|string|max:255',
+        'category_id'     => 'required|exists:categories,id',
+        'price'           => 'required|numeric',
+        'main_image'      => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        'collection_name' => 'nullable|string|max:255', // Tambahkan ini
+        'variants'        => 'required|array|min:1',
+        'variants.*.color_id' => 'required|exists:colors,id',
+        'variants.*.sizes'    => 'required|array',
+        'variants.*.stocks'   => 'required|array',
+    ]);
 
-        try {
-            // Kita bungkus dalam transaksi agar jika varian gagal, produk tidak terbuat (tidak setengah-setengah)
-            DB::transaction(function () use ($request) {
-                
-                // 1. Simpan Gambar Utama
-                $mainImagePath = $request->file('main_image')->store('products/main', 'public');
+    try {
+        DB::transaction(function () use ($request) {
+            $mainImagePath = $request->file('main_image')->store('products/main', 'public');
 
-                // 2. Simpan Data Produk Utama
-                $product = Product::create([
-                    'category_id' => $request->category_id,
-                    'name'        => $request->name,
-                    'slug'        => Str::slug($request->name),
-                    'price'       => $request->price,
-                    'description' => $request->description ?? '-',
-                    'image'       => $mainImagePath,
-                ]);
+            // 2. Simpan ke tabel products (pastikan nama kolom sesuai: collection_name)
+            $product = Product::create([
+                'category_id'     => $request->category_id,
+                'name'            => $request->name,
+                'slug'            => Str::slug($request->name),
+                'price'           => $request->price,
+                'description'     => $request->description ?? '-',
+                'image'           => $mainImagePath,
+                'collection_name' => $request->collection_name, // Gunakan nama kolom ini
+                'is_featured'     => 0, // Default nilai untuk kolom is_featured
+            ]);
 
-                // 3. Simpan Varian per Warna
-                if ($request->has('variants')) {
-                    foreach ($request->variants as $vData) {
-                        
-                        // Cek apakah ada gambar khusus untuk warna ini, jika tidak pakai gambar utama
-                        $vImagePath = $mainImagePath;
-                        if (isset($vData['image']) && $vData['image'] instanceof \Illuminate\Http\UploadedFile) {
-                            $vImagePath = $vData['image']->store('products/variants', 'public');
-                        }
+            // 3. Simpan Varian
+            if ($request->has('variants')) {
+                foreach ($request->variants as $vData) {
+                    $vImagePath = $mainImagePath;
+                    if (isset($vData['image']) && $vData['image'] instanceof \Illuminate\Http\UploadedFile) {
+                        $vImagePath = $vData['image']->store('products/variants', 'public');
+                    }
 
-                        // Simpan setiap ukuran dan stok yang diinput untuk warna ini
-                        foreach ($vData['sizes'] as $sKey => $sizeId) {
-                            $product->variants()->create([
-                                'color_id' => $vData['color_id'],
-                                'size_id'  => $sizeId,
-                                'stock'    => $vData['stocks'][$sKey] ?? 0,
-                                'image'    => $vImagePath,
-                            ]);
-                        }
+                    foreach ($vData['sizes'] as $sKey => $sizeId) {
+                        $product->variants()->create([
+                            'color_id' => $vData['color_id'],
+                            'size_id'  => $sizeId,
+                            'stock'    => $vData['stocks'][$sKey] ?? 0,
+                            'image'    => $vImagePath,
+                        ]);
                     }
                 }
-            });
+            }
+        });
 
-            // Return diletakkan di luar closure transaction agar redirect berjalan lancar
-            return redirect()->route('admin.products.index')->with('success', 'Produk dan varian berhasil ditambahkan!');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan!');
 
-        } catch (\Exception $e) {
-            // Jika gagal, kembalikan ke form dengan pesan error dan input yang lama
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan produk: ' . $e->getMessage());
-        }
+    } catch (\Exception $e) {
+        // Log error untuk debug
+        Log::error($e->getMessage());
+        return redirect()->back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
+    }
     }
 
     /**

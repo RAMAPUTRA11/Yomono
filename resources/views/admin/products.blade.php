@@ -17,21 +17,28 @@
             </button>
         </div>
 
-        {{-- Success/Error Alerts --}}
+        {{-- Success Alerts --}}
         @if(session('success'))
             <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-[10px] uppercase tracking-widest">
                 {{ session('success') }}
             </div>
         @endif
 
-        @if ($errors->any())
+        {{-- Error Alerts (Validation & Database Error) --}}
+        @if(session('error') || $errors->any())
             <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-[10px] uppercase tracking-widest">
-                <p class="font-bold mb-1">Validation Error:</p>
-                <ul class="list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+                @if(session('error'))
+                    <p class="font-bold">{{ session('error') }}</p>
+                @endif
+
+                @if($errors->any())
+                    <p class="font-bold mb-1">Validation Error:</p>
+                    <ul class="list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         @endif
 
@@ -43,6 +50,7 @@
                         <th class="p-6">Image</th>
                         <th class="p-6">Product Name</th>
                         <th class="p-6">Category</th>
+                        <th class="p-6">Collection</th>
                         <th class="p-6">Price</th>
                         <th class="p-6 text-right">Action</th>
                     </tr>
@@ -51,7 +59,6 @@
                     @forelse($products as $product)
                     <tr class="border-b border-gray-50 hover:bg-gray-50">
                         <td class="p-6 w-20">
-                            {{-- TAMPILAN GAMBAR: Menggunakan helper asset untuk akses storage --}}
                             @if($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}" class="w-12 h-16 object-cover grayscale hover:grayscale-0 transition duration-300">
                             @else
@@ -60,16 +67,15 @@
                         </td>
                         <td class="p-6 font-bold text-black uppercase">{{ $product->name }}</td>
                         <td class="p-6 text-gray-400 uppercase">{{ $product->category->name ?? '-' }}</td>
+                        <td class="p-6 text-gray-400 uppercase italic">{{ $product->collection_name ?? '-' }}</td>
                         <td class="p-6">IDR {{ number_format($product->price, 0, ',', '.') }}</td>
                         <td class="p-6 text-right">
                             <div class="flex justify-end items-center gap-6">
-                                {{-- TOMBOL EDIT --}}
                                 <a href="{{ route('admin.products.edit', $product->id) }}" 
                                    class="text-gray-400 hover:text-black font-bold uppercase tracking-widest transition">
                                     EDIT
                                 </a>
 
-                                {{-- TOMBOL DELETE --}}
                                 <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" class="inline">
                                     @csrf @method('DELETE')
                                     <button type="submit" 
@@ -82,7 +88,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="5" class="p-12 text-center text-gray-400 italic">No products available.</td></tr>
+                    <tr><td colspan="6" class="p-12 text-center text-gray-400 italic">No products available.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -90,7 +96,7 @@
     </div>
 </div>
 
-{{-- Add Product Modal (Keep as is) --}}
+{{-- Add Product Modal --}}
 <div id="modal-add-product" class="fixed inset-0 z-[60] hidden overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen p-4">
         <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="toggleModal('modal-add-product')"></div>
@@ -120,6 +126,15 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div>
+                                <label class="text-[10px] uppercase text-gray-400 block mb-2 font-bold">Collection Name</label>
+                                <input type="text" name="collection_name" value="{{ old('collection_name') }}"
+                                    placeholder="e.g. Summer 2026"
+                                    class="w-full border-b py-2 text-xs focus:border-black outline-none transition uppercase">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1">
                             <div>
                                 <label class="text-[10px] uppercase text-gray-400 block mb-2 font-bold">Price (IDR)</label>
                                 <input type="number" name="price" required value="{{ old('price') }}"

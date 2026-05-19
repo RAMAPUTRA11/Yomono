@@ -22,6 +22,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [AdminProduct::class, 'shop'])->name('shop');
 Route::get('/product/{id}', [AdminProduct::class, 'show'])->name('product.show');
 
+
 /*
 |--------------------------------------------------------------------------
 | Auth Routes (Pindahkan ke satu tempat agar tidak bentrok)
@@ -84,7 +85,8 @@ Route::middleware(['auth'])->group(function () {
     // --- CART SYSTEM ---
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
-    
+    Route::get('/profile', [AuthController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     // Perbaikan: Tambahkan route Update dan Remove (Wajib ada untuk fitur di halaman cart)
     Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
@@ -111,7 +113,7 @@ Route::middleware(['auth'])->group(function () {
 */
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminOrder::class, 'index'])->name('dashboard');
-
+    
     // Manajemen Produk
     Route::get('/products', [AdminProduct::class, 'index'])->name('products.index');
     Route::post('/products', [AdminProduct::class, 'store'])->name('products.store');

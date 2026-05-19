@@ -26,7 +26,6 @@
         .mega-menu-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .mega-menu-scroll::-webkit-scrollbar-thumb { background: #888; }
         
-        /* Input styling for newsletter */
         .footer-input {
             background: transparent;
             border-bottom: 1px solid #ccc;
@@ -45,6 +44,7 @@
     <header x-data="{ 
         searchOpen: false, 
         shopMenu: false, 
+        userMenu: false,
         searchQuery: '', 
         suggestions: [],
         fetchSuggestions() {
@@ -78,7 +78,6 @@
                                 <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">COLLECTIONS</h4>
                                 <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
                                     @php
-                                        // Gunakan groupBy sebagai pengganti distinct agar tetap bisa order by created_at
                                         $collections = \App\Models\Product::select('collection_name', \DB::raw('MAX(created_at) as last_created'))
                                                         ->whereNotNull('collection_name')
                                                         ->groupBy('collection_name')
@@ -96,7 +95,6 @@
                                         </li>
                                     @endforeach
 
-                                    {{-- Fallback jika database kosong --}}
                                     @if($collections->isEmpty())
                                         <li><a href="{{ route('shop') }}" class="hover:text-black transition uppercase">New Arrivals</a></li>
                                     @endif
@@ -132,17 +130,41 @@
             </nav>
 
             <div class="flex items-center space-x-6 text-gray-800">
-                @auth
-                    <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('home') }}" 
-                    class="hover:text-gray-600 transition uppercase font-bold">
-                        {{ Auth::user()->name }}
-                    </a>
-                @else
-                    <a href="{{ route('login') }}" 
-                    class="hover:text-gray-600 transition uppercase">
-                        ACCOUNT
-                    </a>
-                @endauth
+                <div class="relative h-20 flex items-center" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
+                    @auth
+                        <button class="hover:text-black transition uppercase font-bold text-[11px] tracking-[0.1em] flex items-center gap-1">
+                            {{ Auth::user()->name }}
+                            <svg class="w-3 h-3 transition-transform duration-200" :class="{ 'rotate-180': userMenu }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+
+                        <div x-show="userMenu" x-cloak
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute right-0 top-[60px] w-48 bg-white border border-gray-100 shadow-xl py-2 z-50">
+                            
+                            <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('home') }}" class="block px-4 py-2 text-[10px] font-bold tracking-widest text-gray-700 hover:bg-gray-50 hover:text-black transition">
+                                {{ Auth::user()->role === 'admin' ? 'DASHBOARD' : 'MY ORDERS' }}
+                            </a>
+                            
+                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-[10px] font-bold tracking-widest text-gray-700 hover:bg-gray-50 hover:text-black transition border-b border-gray-50">
+                                SETTINGS
+                            </a>
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-[10px] font-bold tracking-widest text-red-500 hover:bg-red-50 transition">
+                                    LOGOUT
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" class="hover:text-gray-600 transition uppercase text-[11px] font-bold tracking-[0.1em]">
+                            ACCOUNT
+                        </a>
+                    @endauth
+                </div>
+
                 <button @click="searchOpen = true" class="hover:text-black transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </button>
@@ -185,7 +207,6 @@
     <footer class="bg-[#f2f2f2] pt-20 pb-10 border-t border-gray-200 mt-20">
         <div class="max-w-[1400px] mx-auto px-10">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-                
                 <div class="space-y-6">
                     <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase">dress well, keep it simple</h4>
                     <p class="text-[11px] text-gray-500 leading-relaxed font-light">
