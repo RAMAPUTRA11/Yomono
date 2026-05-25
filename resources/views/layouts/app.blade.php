@@ -168,9 +168,12 @@
                 <button @click="searchOpen = true" class="hover:text-black transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </button>
+                
                 <a href="{{ route('cart.index') }}" class="relative hover:text-black transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                    <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+                    <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                        {{ $cartCount ?? 0 }}
+                    </span>
                 </a>
             </div>
         </div>
@@ -182,12 +185,12 @@
             <div class="mt-20 flex flex-col items-center">
                 <form action="{{ url('/shop') }}" method="GET" class="w-full max-w-3xl text-center">
                     <input type="text" name="search" placeholder="SEARCH PRODUCTS..." x-model="searchQuery" @input.debounce.300ms="fetchSuggestions()"
-                           class="w-full text-3xl md:text-5xl font-light uppercase tracking-tighter border-b border-gray-100 py-6 outline-none focus:border-black transition text-center">
+                           class="w-full text-3xl md:text-5 elders-5xl font-light uppercase tracking-tighter border-b border-gray-100 py-6 outline-none focus:border-black transition text-center">
                     <p class="mt-4 text-[10px] text-gray-400 tracking-[0.2em]">PRESS ENTER TO SEARCH OR ESCAPE TO CLOSE</p>
                 </form>
                 <div class="w-full max-w-2xl mt-10 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[50vh]">
                     <template x-for="item in suggestions" :key="item.id">
-                        <a :href="'/shop/' + item.slug" class="flex items-center space-x-4 p-3 hover:bg-gray-50 transition border-b border-gray-50">
+                        <a :href="'/product/' + item.slug" class="flex items-center space-x-4 p-3 hover:bg-gray-50 transition border-b border-gray-50">
                             <img :src="item.image_url" class="w-12 h-12 object-cover bg-gray-100">
                             <div class="text-left">
                                 <p class="text-[11px] font-bold uppercase tracking-widest text-black" x-text="item.name"></p>
@@ -273,6 +276,32 @@
             </div>
         </div>
     </footer>
+
+    @if(session('success'))
+        <div x-data="{ show: true }" 
+             x-show="show" 
+             x-init="setTimeout(() => show = false, 3000)" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 translate-y-4"
+             class="fixed bottom-5 right-5 bg-black text-white px-6 py-4 z-[150] text-[10px] tracking-[0.2em] uppercase shadow-2xl border border-gray-800 flex items-center gap-3">
+            <i class="fas fa-check-circle text-white"></i>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div x-data="{ show: true }" 
+             x-show="show" 
+             x-init="setTimeout(() => show = false, 4000)" 
+             class="fixed bottom-5 right-5 bg-red-600 text-white px-6 py-4 z-[150] text-[10px] tracking-[0.2em] uppercase shadow-2xl flex items-center gap-3">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ session('error') }}
+        </div>
+    @endif
 
 </body>
 </html>

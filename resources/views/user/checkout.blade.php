@@ -114,8 +114,10 @@
                     </div>
                 </div>
 
-                <button type="submit" class="block w-full bg-black text-white text-center py-4 mt-8 text-[11px] font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg">
-                    Generate Payment Info
+                <input type="hidden" name="payment_method" value="qris"> 
+
+                <button type="submit" class="w-full bg-black text-white py-4 text-[11px] tracking-[0.2em] font-bold uppercase hover:bg-gray-900 transition">
+                    GENERATE PAYMENT INFO
                 </button>
                 
                 <p class="text-[9px] text-gray-400 mt-4 leading-relaxed text-center italic">

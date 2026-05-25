@@ -23,7 +23,7 @@ class ProductController extends Controller
     if ($request->has('collection')) {
         $collection = $request->collection;
         // Mencari produk yang kolom 'collection' nya sesuai dengan parameter URL
-        $query->where('collection', $collection);
+        $query->where('collection_name', $collection);
     }
 
     // 3. Tambahkan Filter Search (Jika ada di URL)
@@ -153,12 +153,16 @@ class ProductController extends Controller
     /**
      * Halaman Detail Produk untuk User
      */
-    public function show($id)
+    public function show($slug)
     {
-        $product = Product::with(['variants.color', 'variants.size', 'category'])->findOrFail($id);
-        return view('user.product_detail', compact('product'));
-    }
+    // Mencari produk berdasarkan slug, jika tidak ada baru coba cari berdasarkan ID
+    $product = Product::with(['variants.color', 'variants.size', 'category'])
+        ->where('slug', $slug)
+        ->orWhere('id', $slug)
+        ->firstOrFail();
 
+    return view('user.product_detail', compact('product'));
+    }
     /**
      * Edit Produk (Form)
      */

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
@@ -20,7 +21,7 @@ use Illuminate\Http\Request;
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [AdminProduct::class, 'shop'])->name('shop');
-Route::get('/product/{id}', [AdminProduct::class, 'show'])->name('product.show');
+Route::get('/product/{slug}', [AdminProduct::class, 'show'])->name('product.show');
 
 
 /*
@@ -69,6 +70,7 @@ Route::get('/api/search-suggestions', function (Request $request) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
+                        'slug' => $product->slug, // TAMBAHKAN INI
                         'price' => number_format($product->price, 0, ',', '.'),
                         'image_url' => asset('storage/' . $product->image) 
                     ];
@@ -91,10 +93,11 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
 
-    // --- CHECKOUT & ORDERS ---
-    // Perbaikan: Checkout biasanya GET untuk menampilkan form, dan POST untuk proses pesanan
-    Route::get('/checkout', [OrderController::class, 'index'])->name('checkout'); 
-    Route::post('/checkout/process', [OrderController::class, 'processCheckout'])->name('checkout.process');
+ 
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index'); // Tambahkan ini
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout/success/{id}', [CheckoutController::class, 'success'])->name('checkout.success');
+
     
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('order.show');

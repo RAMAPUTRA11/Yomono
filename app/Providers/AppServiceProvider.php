@@ -3,34 +3,28 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
-use App\Models\Category;
+use Illuminate\Support\Facades\View; // Tambahkan ini
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
+use App\Models\Cart; // Tambahkan ini
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        /**
-         * Share data categories ke semua view (*).
-         * Ini gunanya biar header di app.blade.php bisa nampilin daftar kategori 
-         * secara dinamis dari database tanpa bikin error 'variable undefined'.
-         */
+        // Berbagi data jumlah keranjang ke semua file .blade.php
         View::composer('*', function ($view) {
-            // Kita ambil kategori dan diurutkan (optional, bisa lu hapus ->orderBy jika gak perlu)
-            $categories = Category::orderBy('name', 'asc')->get();
-            
-            $view->with('categories', $categories);
+            if (Auth::check()) {
+                // Menghitung jumlah item unik di keranjang user
+                $cartCount = Cart::where('user_id', Auth::id())->count();
+                $view->with('cartCount', $cartCount);
+            } else {
+                $view->with('cartCount', 0);
+            }
         });
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\models\Order;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
