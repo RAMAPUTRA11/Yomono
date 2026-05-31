@@ -216,33 +216,35 @@
                         since 2012, we’re committed to always give you a better daily-wear with timeless and minimalist design as our guide, either casual, semi-formal, or formal look, that you’ll love to wear anywhere and anytime.
                     </p>
                     <div class="pt-4">
-                        <p class="text-[9px] text-gray-400 leading-relaxed">
-                            Layanan Pengaduan Konsumen Direktorat Jenderal Perlindungan Konsumen dan Tertib Niaga Kementerian Perdagangan RI<br>
-                            Nomor Whatsapp Ditjen PKTN 0853-1111-1010
-                        </p>
+                    <p class="text-[9px] text-gray-400 leading-relaxed">
+                        Layanan Pengaduan Konsumen Direktorat Jenderal Perlindungan Konsumen dan Tertib Niaga Kementerian Perdagangan RI<br>
+                        Nomor Whatsapp Ditjen PKTN 
+                        <a href="https://wa.me/6285311111010" target="_blank" class="hover:text-black transition underline decoration-gray-300">
+                            0853-1111-1010
+                        </a>
+                    </p>
                     </div>
                     <div class="flex space-x-5 text-gray-600">
-                        <a href="#" class="hover:text-black transition"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="hover:text-black transition"><i class="fab fa-tiktok"></i></a>
-                        <a href="#" class="hover:text-black transition"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.instagram.com/yomonoid/" class="hover:text-black transition"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@yomonoid" class="hover:text-black transition"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://shopee.co.id/yoihijab?entryPoint=ShopBySearch&searchKeyword=yomonoid" class="hover:text-black transition"><i class="fas fa-bag-shopping"></i></a>
                     </div>
                 </div>
 
                 <div>
                     <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-8">NEED HELP</h4>
                     <ul class="space-y-4 text-[11px] text-gray-500 font-light">
-                        <li><a href="{{ route('login') }}" class="hover:text-black transition">my account</a></li>
+                        <li><a href="{{ route('login') }}" class="hover:text-black transition">Daftar Akun</a></li>
                         <li><a href="{{ route('pages.faq') }}" class="hover:text-black transition">FAQ</a></li>
-                        <li><a href="{{ route('pages.returns-shipping') }}" class="hover:text-black transition">returns and shipping</a></li>
-                        <li><a href="{{ route('pages.how-to-purchase') }}" class="hover:text-black transition">how to purchase</a></li>
-                        <li><a href="{{ route('pages.sizing-guide') }}" class="hover:text-black transition">sizing guide</a></li>
+                        <li><a href="{{ route('pages.returns-shipping') }}" class="hover:text-black transition">Return & Shipping</a></li>
+                        <li><a href="{{ route('pages.how-to-purchase') }}" class="hover:text-black transition">How to Purchase</a></li>
+                        <li><a href="{{ route('pages.sizing-guide') }}" class="hover:text-black transition">Sizing Guide</a></li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-8">ABOUT US</h4>
                     <ul class="space-y-4 text-[11px] text-gray-500 font-light">
-                        <li><a href="{{ route('pages.stores') }}" class="hover:text-black transition">visit our stores</a></li>
                         <li><a href="{{ route('pages.career') }}" class="hover:text-black transition">join #yomonoteam</a></li>
                         <li><a href="{{ route('pages.journal') }}" class="hover:text-black transition">journal #YOMONO</a></li>
                     </ul>

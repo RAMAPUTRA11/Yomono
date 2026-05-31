@@ -51,7 +51,6 @@ Route::prefix('pages')->name('pages.')->group(function () {
     Route::get('/returns-shipping', fn() => view('pages.returns-shipping'))->name('returns-shipping');
     Route::get('/how-to-purchase', fn() => view('pages.how-to-purchase'))->name('how-to-purchase');
     Route::get('/sizing-guide', fn() => view('pages.sizing-guide'))->name('sizing-guide');
-    Route::get('/stores', fn() => view('pages.stores'))->name('stores');
     Route::get('/career', fn() => view('pages.career'))->name('career');
     Route::get('/journal', fn() => view('pages.journal'))->name('journal');
 });
