@@ -6,34 +6,77 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Color;
 use App\Models\Size;
-use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
     /**
-     * Dashboard Summary
+     * Menampilkan Dashboard Utama Admin / Statistik Ringkas
      */
-public function index(): View
-{
-    $orders = Order::with('user')->latest()->take(5)->get();
-    $stats = [
-        // SESUAIKAN DENGAN NAMA KOLOM DI DB KAMU (total_price)
-        'total_sales' => Order::where('payment_status', 'paid')->sum('total_amount') ?? 0, 
-        'total_orders' => Order::count(),
-        'pending_orders' => Order::where('payment_status', 'pending')->count(),
-        'total_products' => Product::count(),
-    ];
-
-    return view('admin.dashboard', compact('orders', 'stats'));
-}
+    public function index()
+    {
+        $orders = Order::with('user')->latest()->take(5)->get();
+        return view('admin.dashboard', compact('orders'));
+    }
 
     /**
-     * HALAMAN MANAGE ATTRIBUTES (Warna & Ukuran)
+     * Menampilkan Semua Daftar Transaksi Pelanggan
      */
-    public function attributes(): View
+    public function allOrders()
+    {
+        $orders = Order::with('user')->latest()->get();
+        return view('admin.orders', compact('orders'));
+    }
+
+    /**
+     * FIX ERROR: Menampilkan Detail Single Transaksi
+     * Mengubah nama view dari 'admin.orders_show' menjadi 'admin.orders_detail'
+     */
+    public function show($id)
+    {
+        $order = Order::with([
+            'user', 
+            'orderItems.variant.product', 
+            'orderItems.variant.color', 
+            'orderItems.variant.size'
+        ])->findOrFail($id);
+        
+        // Disesuaikan dengan nama file fisik Anda: orders_detail.blade.php
+        return view('admin.orders_detail', compact('order')); 
+    }
+
+    /**
+     * Menyetujui Pembayaran Masuk (Confirm Payment)
+     */
+    public function confirmPayment($id)
+    {
+        $order = Order::findOrFail($id);
+        $order->update([
+            'payment_status' => 'paid',
+            'status' => 'processing'
+        ]);
+
+        return redirect()->back()->with('success', 'Status pembayaran berhasil dikonfirmasi.');
+    }
+
+    /**
+     * Menolak Pesanan / Pembayaran (Reject Order)
+     */
+    public function rejectOrder($id)
+    {
+        $order = Order::findOrFail($id);
+        $order->update([
+            'payment_status' => 'failed',
+            'status' => 'cancelled'
+        ]);
+
+        return redirect()->back()->with('success', 'Pesanan telah ditolak.');
+    }
+
+    /**
+     * Menampilkan Manajemen Atribut (Warna & Ukuran)
+     */
+    public function attributes()
     {
         $colors = Color::all();
         $sizes = Size::all();
@@ -41,51 +84,44 @@ public function index(): View
     }
 
     /**
-     * Simpan Warna Baru
+     * Menyimpan Atribut Warna Baru
      */
-    public function storeColor(Request $request): RedirectResponse
+    public function storeColor(Request $request)
     {
-        $request->validate(['name' => 'required|unique:colors,name']);
-        Color::create(['name' => strtoupper($request->name)]);
-        return redirect()->back()->with('success', 'Warna berhasil ditambahkan!');
+        $request->validate(['name' => 'required|string|unique:colors,name']);
+        Color::create(['name' => $request->name]);
+        return redirect()->back()->with('success', 'Atribut warna berhasil ditambahkan.');
     }
 
     /**
-     * Simpan Ukuran Baru
+     * Menyimpan Atribut Ukuran Baru
      */
-    public function storeSize(Request $request): RedirectResponse
+    public function storeSize(Request $request)
     {
-        $request->validate(['name' => 'required|unique:sizes,name']);
-        Size::create(['name' => strtoupper($request->name)]);
-        return redirect()->back()->with('success', 'Ukuran berhasil ditambahkan!');
+        $request->validate(['name' => 'required|string|unique:sizes,name']);
+        Size::create(['name' => $request->name]);
+        return redirect()->back()->with('success', 'Atribut ukuran berhasil ditambahkan.');
     }
 
     /**
-     * Manajemen Transaksi
+     * FIX ERROR: Menangani Aksi Pengiriman Milestone Status dari Modal Update Tracking
      */
-    public function allOrders(): View
+    public function updateStatus(Request $request, $id)
     {
-        $orders = Order::with(['user', 'orderItems.product'])->latest()->get();
-        return view('admin.orders', compact('orders'));
-    }
+        // Validasi input status agar sinkron dengan struktur database dan modal pilihan Anda
+        $request->validate([
+            'status' => 'required|string|in:pending,processing,shipped,completed,cancelled',
+            'tracking_number' => 'nullable|string|max:100'
+        ]);
 
-    public function show(int $id): View
-    {
-        $order = Order::with(['user', 'orderItems.product', 'payment'])->findOrFail($id);
-        return view('admin.order_detail', compact('order'));
-    }
-
-    public function confirmPayment(int $id): RedirectResponse
-    {
         $order = Order::findOrFail($id);
-        $order->update(['payment_status' => 'paid', 'status' => 'processing']);
-        return redirect()->back()->with('success', "Transaksi Berhasil!");
-    }
+        
+        // Update data tracking logistik
+        $order->update([
+            'status' => $request->status,
+            'tracking_number' => $request->tracking_number ?? $order->tracking_number
+        ]);
 
-    public function rejectOrder(int $id): RedirectResponse
-    {
-        $order = Order::findOrFail($id);
-        $order->update(['payment_status' => 'failed', 'status' => 'cancelled']);
-        return redirect()->back()->with('error', "Transaksi Dibatalkan.");
+        return redirect()->back()->with('success', 'Milestone pengiriman pesanan berhasil diperbarui!');
     }
 }

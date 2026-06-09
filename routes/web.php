@@ -8,6 +8,8 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\Customer\OrderCustomerController;
+use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Admin\ProductController as AdminProduct;
 use App\Http\Controllers\Admin\TransactionController as AdminOrder;
 use App\Http\Controllers\Admin\CategoryController;
@@ -26,7 +28,7 @@ Route::get('/product/{slug}', [AdminProduct::class, 'show'])->name('product.show
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes (Pindahkan ke satu tempat agar tidak bentrok)
+| Auth Routes
 |--------------------------------------------------------------------------
 */
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -41,12 +43,10 @@ Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback
 
 /*
 |--------------------------------------------------------------------------
-| Informational Pages (Grup rute statis)
+| Informational Pages
 |--------------------------------------------------------------------------
 */
 Route::prefix('pages')->name('pages.')->group(function () {
-    // INFO: Hapus login/register/shop dari sini karena sudah ada di Public Routes di atas
-    
     Route::get('/faq', fn() => view('pages.faq'))->name('faq');
     Route::get('/returns-shipping', fn() => view('pages.returns-shipping'))->name('returns-shipping');
     Route::get('/how-to-purchase', fn() => view('pages.how-to-purchase'))->name('how-to-purchase');
@@ -57,7 +57,7 @@ Route::prefix('pages')->name('pages.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API / AJAX Routes
+| API / AJAX Routes & Payment Webhook (Public)
 |--------------------------------------------------------------------------
 */
 Route::get('/api/search-suggestions', function (Request $request) {
@@ -69,13 +69,16 @@ Route::get('/api/search-suggestions', function (Request $request) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
-                        'slug' => $product->slug, // TAMBAHKAN INI
+                        'slug' => $product->slug,
                         'price' => number_format($product->price, 0, ',', '.'),
                         'image_url' => asset('storage/' . $product->image) 
                     ];
                 });
     return response()->json($products);
 });
+
+Route::post('/api/payment/notification', [AdminOrder::class, 'handleAutoPaymentNotification'])->name('payment.notification');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -86,28 +89,43 @@ Route::middleware(['auth'])->group(function () {
     // --- CART SYSTEM ---
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
-    Route::get('/profile', [AuthController::class, 'editProfile'])->name('profile.edit');
-    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
-    // Perbaikan: Tambahkan route Update dan Remove (Wajib ada untuk fitur di halaman cart)
     Route::patch('/cart/update/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
 
- 
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index'); // Tambahkan ini
-    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/success/{id}', [CheckoutController::class, 'success'])->name('checkout.success');
-
+    // --- ALAMAT CUSTOMER ---
+    Route::post('/pengaturan/alamat', [ProfileController::class, 'storeAddress'])->name('profile.address.store');
+    Route::delete('/pengaturan/alamat/{id}', [ProfileController::class, 'destroyAddress'])->name('profile.address.destroy');
     
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('order.show');
+    // --- MANAJEMEN PESANAN CUSTOMER (SINKRONISASI TOTAL) ---
+    Route::get('/pesanan-saya', [OrderController::class, 'pesananSaya'])->name('orders.pesanan');
 
-    // --- PAYMENT ---
+    // 1. Rute asli kamu tetap ada dan utuh:
+    Route::get('/pesanan-saya/{id}', [OrderController::class, 'show'])->name('orders.show'); 
+
+    // 2. Ditambahkan rute pendukung ini agar tidak terjadi error "Route not defined" lagi:
+    Route::get('/order/{id}', [OrderController::class, 'show'])->name('order.show');
+
+    // Rute GET untuk menampilkan halaman simulasi pembayaran
+    Route::get('/order/{id}/pay-demo', [OrderController::class, 'payDemoPage'])->name('order.payDemo');
+    // Rute POST untuk memproses form aksi pembayaran instan
+    Route::post('/order/{id}/pay-demo', [OrderController::class, 'processPayDemo'])->name('order.payDemo.process');
+
+    // --- CHECKOUT ---
+    Route::get('/checkout', [OrderController::class, 'index'])->name('checkout.index'); 
+    Route::post('/checkout/proses', [OrderController::class, 'checkout'])->name('order.checkout'); 
+
+    // --- PENGATURAN PROFIL (CUSTOMER) ---
+    Route::get('/pengaturan', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/pengaturan', [ProfileController::class, 'update'])->name('profile.update');
+
+    // --- PAYMENT (MANUAL/CADANGAN) ---
     Route::get('/payment/upload/{orderId}', [PaymentController::class, 'showUploadForm'])->name('payment.upload');
     Route::post('/payment/store', [PaymentController::class, 'store'])->name('payment.store');
 
     // --- REVIEWS ---
     Route::post('/review/store', [ReviewController::class, 'store'])->name('review.store');
 });
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
@@ -116,7 +134,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminOrder::class, 'index'])->name('dashboard');
     
-    // Manajemen Produk
+    // Manajemen Produk & Kategori
     Route::get('/products', [AdminProduct::class, 'index'])->name('products.index');
     Route::post('/products', [AdminProduct::class, 'store'])->name('products.store');
     Route::get('/products/{id}/edit', [AdminProduct::class, 'edit'])->name('products.edit');
@@ -125,13 +143,19 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 
     Route::resource('categories', CategoryController::class);
 
-    // Atribut & Transaksi
+    // Atribut Varian Produk
     Route::get('/attributes', [AdminOrder::class, 'attributes'])->name('attributes.index');
     Route::post('/colors', [AdminOrder::class, 'storeColor'])->name('colors.store');
     Route::post('/sizes', [AdminOrder::class, 'storeSize'])->name('sizes.store');
 
+    // Manajemen Order & Logistik Kurir
     Route::get('/orders', [AdminOrder::class, 'allOrders'])->name('orders.index');
     Route::get('/orders/{id}', [AdminOrder::class, 'show'])->name('orders.show');
-    Route::post('/orders/{id}/confirm', [AdminOrder::class, 'confirmPayment'])->name('orders.confirm');
+    Route::put('/orders/{id}/confirm', [AdminOrder::class, 'confirmPayment'])->name('orders.confirm');
     Route::post('/orders/{id}/reject', [AdminOrder::class, 'rejectOrder'])->name('orders.reject');
+    
+    // SOLUSI UTAMA: Mengarah dengan valid ke TransactionController@updateStatus
+    Route::patch('/orders/{id}/status', [AdminOrder::class, 'updateStatus'])->name('orders.update-status');
+    
+    Route::get('/orders/{id}/print', [AdminOrder::class, 'show'])->name('orders.print');
 });

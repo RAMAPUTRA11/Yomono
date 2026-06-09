@@ -11,8 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // 1. Mendaftarkan alias middleware admin yang sudah ada
         $middleware->alias([
-        'is_admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'is_admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
+
+        // 2. Menambahkan pengecualian CSRF token agar webhook otomatisasi payment tidak diblokir
+        $middleware->validateCsrfTokens(except: [
+            'api/payment/notification',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

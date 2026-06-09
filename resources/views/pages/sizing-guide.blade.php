@@ -1,96 +1,87 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-[900px] mx-auto px-6 py-24">
-    <div class="mb-16 text-center">
+<div class="max-w-[800px] mx-auto px-6 py-24">
+    {{-- Header --}}
+    <div class="mb-20 text-center">
         <h1 class="text-2xl font-light tracking-[0.4em] uppercase mb-4 text-gray-900">Sizing Guide</h1>
         <div class="h-[1px] w-12 bg-black mx-auto mb-6"></div>
-        <p class="text-[11px] text-gray-400 uppercase tracking-[0.2em]">Find your perfect fit</p>
+        <p class="text-[11px] text-gray-400 uppercase tracking-[0.2em]">Sistem Ukuran Gabungan (Dual-Sizing) YOMONO</p>
     </div>
 
-    {{-- Kategori: Tops --}}
+    {{-- Kategori 1: Tops (Atasan) --}}
     <div class="mb-20">
-        <h2 class="text-[13px] font-bold uppercase tracking-[0.3em] mb-8 border-b border-black pb-2 inline-block">Tops (Atasan)</h2>
+        <div class="flex justify-between items-baseline border-b border-black pb-2 mb-6">
+            <h2 class="text-[12px] font-bold uppercase tracking-[0.2em] text-gray-900">Tops (Atasan)</h2>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">* Satuan dalam Centimeter (CM)</span>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-[11px] uppercase tracking-widest">
                 <thead>
-                    <tr class="border-b border-gray-200">
-                        <th class="py-4 font-semibold text-gray-900">Size</th>
-                        <th class="py-4 font-semibold text-gray-900">Chest (LD)</th>
-                        <th class="py-4 font-semibold text-gray-900">Length (Pjg)</th>
-                        <th class="py-4 font-semibold text-gray-900">Sleeve (Lengan)</th>
+                    <tr class="border-b border-gray-200 text-gray-400 text-[10px]">
+                        <th class="py-4 font-bold">Size</th>
+                        <th class="py-4 font-bold">Chest (Lebar Dada)</th>
+                        <th class="py-4 font-bold">Body Length (Panjang Baju)</th>
+                        <th class="py-4 font-bold">Sleeve (Panjang Lengan)</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-500">
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">S</td>
-                        <td class="py-4">100 CM</td>
-                        <td class="py-4">68 CM</td>
-                        <td class="py-4">22 CM</td>
+                <tbody class="text-gray-500 divide-y divide-gray-100">
+                    <tr>
+                        <td class="py-5 text-black font-bold text-[12px]">S - M</td>
+                        <td class="py-5">102 cm</td>
+                        <td class="py-5">69 cm</td>
+                        <td class="py-5">23 cm</td>
                     </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">M</td>
-                        <td class="py-4">105 CM</td>
-                        <td class="py-4">70 CM</td>
-                        <td class="py-4">23 CM</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">L</td>
-                        <td class="py-4">110 CM</td>
-                        <td class="py-4">72 CM</td>
-                        <td class="py-4">24 CM</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">XL</td>
-                        <td class="py-4">115 CM</td>
-                        <td class="py-4">74 CM</td>
-                        <td class="py-4">25 CM</td>
+                    <tr>
+                        <td class="py-5 text-black font-bold text-[12px]">L - XL</td>
+                        <td class="py-5">112 cm</td>
+                        <td class="py-5">73 cm</td>
+                        <td class="py-5">25 cm</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    {{-- Kategori: Bottoms --}}
-    <div>
-        <h2 class="text-[13px] font-bold uppercase tracking-[0.3em] mb-8 border-b border-black pb-2 inline-block">Bottoms (Bawahan)</h2>
+    {{-- Kategori 2: Bottoms (Bawahan) --}}
+    <div class="mb-20">
+        <div class="flex justify-between items-baseline border-b border-black pb-2 mb-6">
+            <h2 class="text-[12px] font-bold uppercase tracking-[0.2em] text-gray-900">Bottoms (Bawahan)</h2>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider">* Satuan dalam Centimeter (CM)</span>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-[11px] uppercase tracking-widest">
                 <thead>
-                    <tr class="border-b border-gray-200">
-                        <th class="py-4 font-semibold text-gray-900">Size</th>
-                        <th class="py-4 font-semibold text-gray-900">Waist (LP)</th>
-                        <th class="py-4 font-semibold text-gray-900">Hip (Pinggul)</th>
-                        <th class="py-4 font-semibold text-gray-900">Length (Pjg)</th>
+                    <tr class="border-b border-gray-200 text-gray-400 text-[10px]">
+                        <th class="py-4 font-bold">Size</th>
+                        <th class="py-4 font-bold">Waist (Lingkar Pinggang)</th>
+                        <th class="py-4 font-bold">Equivalent Nomor Celana</th>
+                        <th class="py-4 font-bold">Outseam (Panjang Celana)</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-500">
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">28-29</td>
-                        <td class="py-4">76-78 CM</td>
-                        <td class="py-4">98 CM</td>
-                        <td class="py-4">95 CM</td>
+                <tbody class="text-gray-500 divide-y divide-gray-100">
+                    <tr>
+                        <td class="py-5 text-black font-bold text-[12px]">S - M</td>
+                        <td class="py-5">70 - 82 cm</td>
+                        <td class="py-5 text-gray-400">Setara No. 27 - 30</td>
+                        <td class="py-5">96 cm</td>
                     </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">30-31</td>
-                        <td class="py-4">80-82 CM</td>
-                        <td class="py-4">102 CM</td>
-                        <td class="py-4">97 CM</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-4 text-black font-medium">32-33</td>
-                        <td class="py-4">84-86 CM</td>
-                        <td class="py-4">106 CM</td>
-                        <td class="py-4">99 CM</td>
+                    <tr>
+                        <td class="py-5 text-black font-bold text-[12px]">L - XL</td>
+                        <td class="py-5">82 - 94 cm</td>
+                        <td class="py-5 text-gray-400">Setara No. 31 - 34</td>
+                        <td class="py-5">99 cm</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="mt-20 p-8 bg-gray-50 text-[11px] text-gray-400 leading-loose uppercase tracking-widest">
-        * Toleransi perbedaan ukuran 1-2 CM karena proses produksi massal. <br>
-        * Model pria biasanya menggunakan size L (TB 180cm / BB 75kg).
+    {{-- Catatan Produksi --}}
+    <div class="p-8 bg-gray-50 text-[11px] text-gray-400 leading-relaxed tracking-wider border border-gray-100">
+        <p class="mb-2">* **Keterangan Ukuran:** Jika kamu biasa mengenakan ukuran pakaian S atau M, silakan pilih opsi **S-M**. Jika biasa menggunakan L atau XL, pilih opsi **L-XL**.</p>
+        <p class="mb-2">* Toleransi perbedaan ukuran 1 - 2 cm wajar terjadi dikarenakan pengerjaan proses potong produksi massal.</p>
+        <p class="mb-0">* Model katalog pria umumnya mengenakan ukuran **L-XL** (Tinggi Badan 180 cm / Berat Badan 75 kg).</p>
     </div>
 </div>
 @endsection

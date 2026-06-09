@@ -4,46 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
     use HasFactory;
 
-    /**
-     * fillable: Mendaftarkan kolom yang diizinkan untuk diisi secara massal.
-     * Pastikan nama kolom di sini SAMA PERSIS dengan yang ada di HeidiSQL kamu.
-     */
     protected $fillable = [
         'user_id', 
         'order_number', 
-        'total_amount',      // Sesuai screenshot HeidiSQL terakhir
+        'total_amount',      
         'status', 
-        'payment_status',    // Sesuai screenshot HeidiSQL terakhir
-        'shipping_address',  // Sesuai screenshot HeidiSQL terakhir
+        'payment_status',    
+        'shipping_address',  
         'tracking_number',
         'phone'
     ];
 
-    /**
-     * Relasi ke User (Pembeli)
-     */
-    public function user() 
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relasi ke OrderItems (Detail barang yang dibeli)
-     */
-    public function items() 
+    // Nama fungsi relasi terkunci menggunakan orderItems()
+    public function orderItems(): HasMany
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
 
-    /**
-     * Relasi ke Payment (Jika kamu punya tabel pembayaran terpisah)
-     */
-    public function payment() 
+    public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
     }

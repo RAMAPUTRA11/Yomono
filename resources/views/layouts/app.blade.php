@@ -35,250 +35,252 @@
         .footer-input:focus { border-color: black; }
     </style>
 </head>
-<body class="bg-white flex flex-col min-h-screen">
+<body class="bg-white flex flex-col min-h-screen w-full overflow-x-hidden" x-data="{ mobileMenuOpen: false }">
 
-    <div class="bg-black text-white text-[10px] py-2.5 text-center tracking-[0.2em] uppercase z-[70] relative">
-        Free shipping up to 50,000 with a minimum purchase of 199,000
+    {{-- Pengumuman Atas (Gratis Ongkir) --}}   
+    <div class="bg-black text-white text-[9px] md:text-[10px] py-2.5 text-center tracking-[0.15em] md:tracking-[0.2em] uppercase z-[70] relative px-4">
+        Gratis Ongkir untuk Pembelian di atas IDR 500.000
     </div>
 
-    <header x-data="{ 
-        searchOpen: false, 
-        shopMenu: false, 
-        userMenu: false,
-        searchQuery: '', 
-        suggestions: [],
-        fetchSuggestions() {
-            if (this.searchQuery.length < 2) { this.suggestions = []; return; }
-            fetch(`/api/search-suggestions?q=${this.searchQuery}`)
-                .then(res => res.json())
-                .then(data => { this.suggestions = data; })
-        }
-    }" class="sticky top-0 z-50 bg-white border-b border-gray-100">
+    {{-- Header / Navbar Utama --}}
+<header x-data="{ 
+    searchOpen: false, 
+    shopMenu: false, 
+    userMenu: false,
+    searchQuery: '', 
+    suggestions: [],
+    fetchSuggestions() {
+        if (this.searchQuery.length < 2) { this.suggestions = []; return; }
+        fetch(`/api/search-suggestions?q=${this.searchQuery}`)
+            .then(res => res.json())
+            .then(data => { this.suggestions = data; })
+    }
+}" class="sticky top-0 z-50 bg-white border-b border-gray-100">
+    
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
         
-        <div class="max-w-[1400px] mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex-shrink-0">
-                <a href="/" class="text-2xl font-bold tracking-tighter text-black">YOMONO</a>
-            </div>
+        {{-- Bagian Kiri: Hamburger Menu untuk Mobile/Tablet --}}
+        <div class="flex lg:hidden">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-800 focus:outline-none p-2" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path :class="{'hidden': mobileMenuOpen, 'inline-flex': !mobileMenuOpen }" stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    <path :class="{'hidden': !mobileMenuOpen, 'inline-flex': mobileMenuOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
 
-            <nav class="hidden lg:flex space-x-10 text-[11px] font-medium uppercase tracking-[0.15em] text-gray-700 items-center">
-                <a href="{{ url('/shop?collection=new Artikel') }}" class="nav-link hover:text-black transition">New Artikel</a>
-                <a href="{{ url('/shop?collection=Best in 2026') }}" class="nav-link hover:text-black transition">Best in 2026</a>
-                <a href="{{ url('/shop?collection=all categories') }}" class="nav-link hover:text-black transition">All Categories</a>
+        {{-- Brand Logo --}}
+        <div class="flex-shrink-0">
+            <a href="/" class="text-xl md:text-2xl font-bold tracking-tighter text-black">YOMONO</a>
+        </div>
 
-                <div class="relative h-20 flex items-center" @mouseenter="shopMenu = true" @mouseleave="shopMenu = false">
-                    <a href="{{ url('/shop') }}" class="nav-link hover:text-black transition py-2" :class="{ 'active-link': shopMenu }">Shop</a>
+        {{-- Navigasi Desktop --}}
+        <nav class="hidden lg:flex space-x-10 text-[11px] font-medium uppercase tracking-[0.15em] text-gray-700 items-center">
+            <a href="{{ url('/shop?collection=all categories') }}" class="nav-link hover:text-black transition">Semua Kategori</a>
 
-                    <div x-show="shopMenu" x-cloak
-                         x-transition:enter="transition ease-out duration-300"
-                         x-transition:enter-start="opacity-0 -translate-y-4"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         class="fixed left-0 top-20 w-full bg-white border-b border-gray-100 shadow-xl z-40 overflow-y-auto max-h-[70vh] mega-menu-scroll">
-                        <div class="max-w-[1400px] mx-auto grid grid-cols-4 gap-10 py-14 px-20">
-                            <div>
-                                <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">COLLECTIONS</h4>
-                                <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
-                                    @php
-                                        $collections = \App\Models\Product::select('collection_name', \DB::raw('MAX(created_at) as last_created'))
-                                                        ->whereNotNull('collection_name')
-                                                        ->groupBy('collection_name')
-                                                        ->orderBy('last_created', 'desc')
-                                                        ->take(4)
-                                                        ->get();
-                                    @endphp
+            <div class="relative h-20 flex items-center" @mouseenter="shopMenu = true" @mouseleave="shopMenu = false">
+                <a href="{{ url('/shop') }}" class="nav-link hover:text-black transition py-2" :class="{ 'active-link': shopMenu }">Shop</a>
 
-                                    @foreach($collections as $col)
-                                        <li>
-                                            <a href="{{ route('shop', ['collection' => $col->collection_name]) }}" 
-                                            class="hover:text-black transition uppercase">
-                                                {{ $col->collection_name }}
-                                            </a>
-                                        </li>
+                <div x-show="shopMenu" x-cloak
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 -translate-y-4"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="fixed left-0 top-20 w-full bg-white border-b border-gray-100 shadow-xl z-40 overflow-y-auto max-h-[70vh] mega-menu-scroll">
+                    <div class="max-w-[1400px] mx-auto grid grid-cols-4 gap-10 py-14 px-20">
+                        <div>
+                            <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">KOLEKSI</h4>
+                            <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
+                                @php
+                                    $collections = \App\Models\Product::select('collection_name', \DB::raw('MAX(created_at) as last_created'))
+                                                            ->whereNotNull('collection_name')
+                                                            ->groupBy('collection_name')
+                                                            ->orderBy('last_created', 'desc')
+                                                            ->take(4)
+                                                            ->get();
+                                @endphp
+
+                                @foreach($collections as $col)
+                                    <li>
+                                        <a href="{{ route('shop', ['collection' => $col->collection_name]) }}" class="hover:text-black transition uppercase">
+                                            {{ $col->collection_name }}
+                                        </a>
+                                    </li>
+                                @endforeach
+
+                                @if($collections->isEmpty())
+                                    <li><a href="{{ route('shop') }}" class="hover:text-black transition uppercase">Produk Terbaru</a></li>
+                                @endif
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">SOROTAN</h4>
+                            <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
+                                <li><a href="{{ url('/shop?highlight=best-seller') }}" class="hover:text-black transition font-bold text-black italic">Produk Terlaris</a></li>
+                                <li><a href="{{ url('/shop?highlight=womenswear') }}" class="hover:text-black transition">Pakaian Wanita</a></li>
+                                <li><a href="{{ route('pages.faq') }}" class="hover:text-black transition border-t border-gray-100 pt-3 block mt-3">Tentang Kami</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">KATEGORI</h4>
+                            <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
+                                @if(isset($categories) && $categories->count() > 0)
+                                    @foreach($categories as $category)
+                                        <li><a href="{{ url('/shop?category=' . $category->slug) }}" class="hover:text-black transition">{{ $category->name }}</a></li>
                                     @endforeach
-
-                                    @if($collections->isEmpty())
-                                        <li><a href="{{ route('shop') }}" class="hover:text-black transition uppercase">New Arrivals</a></li>
-                                    @endif
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">HIGHLIGHT</h4>
-                                <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
-                                    <li><a href="{{ url('/shop?highlight=best-seller') }}" class="hover:text-black transition font-bold text-black italic">Best Seller</a></li>
-                                    <li><a href="{{ url('/shop?highlight=womenswear') }}" class="hover:text-black transition">Womenswear</a></li>
-                                    <li><a href="{{ route('pages.faq') }}" class="hover:text-black transition border-t border-gray-100 pt-3 block mt-3">About Us</a></li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h4 class="text-black font-bold mb-6 tracking-[0.2em] text-[12px] uppercase">CATEGORY</h4>
-                                <ul class="space-y-3 text-gray-500 font-normal tracking-wide text-[11px]">
-                                    @if(isset($categories) && $categories->count() > 0)
-                                        @foreach($categories as $category)
-                                            <li><a href="{{ url('/shop?category=' . $category->slug) }}" class="hover:text-black transition">{{ $category->name }}</a></li>
-                                        @endforeach
-                                    @else
-                                        <li><a href="#" class="hover:text-black transition">Tops</a></li>
-                                        <li><a href="#" class="hover:text-black transition">Bottoms</a></li>
-                                    @endif
-                                </ul>
-                            </div>
-                            <div class="flex items-center justify-center bg-gray-50 rounded-sm p-4">
-                                <p class="text-[10px] text-gray-400 tracking-[0.2em] uppercase italic text-center">New Arrivals<br>Available Now</p>
-                            </div>
+                                @else
+                                    <li><a href="#" class="hover:text-black transition">Atasan</a></li>
+                                    <li><a href="#" class="hover:text-black transition">Bawahan</a></li>
+                                @endif
+                            </ul>
+                        </div>
+                        <div class="flex items-center justify-center bg-gray-50 rounded-sm p-4">
+                            <p class="text-[10px] text-gray-400 tracking-[0.2em] uppercase italic text-center">Koleksi Baru<br>Tersedia Sekarang</p>
                         </div>
                     </div>
                 </div>
-            </nav>
+            </div>
+        </nav>
 
-            <div class="flex items-center space-x-6 text-gray-800">
-                <div class="relative h-20 flex items-center" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
-                    @auth
-                        <button class="hover:text-black transition uppercase font-bold text-[11px] tracking-[0.1em] flex items-center gap-1">
-                            {{ Auth::user()->name }}
-                            <svg class="w-3 h-3 transition-transform duration-200" :class="{ 'rotate-180': userMenu }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
+        <div class="flex items-center space-x-4 md:space-x-6 text-gray-800">
+            <div class="relative h-16 md:h-20 flex items-center" @mouseenter="userMenu = true" @mouseleave="userMenu = false">
+                @auth
+                    <button class="hover:text-black transition uppercase font-bold text-[10px] md:text-[11px] tracking-[0.1em] flex items-center gap-1">
+                        <span class="max-w-[70px] md:max-w-none truncate">{{ Auth::user()->name }}</span>
+                        <svg class="w-3 h-3 transition-transform duration-200" :class="{ 'rotate-180': userMenu }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="userMenu" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="absolute right-0 top-[50px] md:top-[60px] w-48 bg-white border border-gray-100 shadow-xl py-2 z-50">
+                        
+                        {{-- DI PERBAIKI DISINI: rute diubah menjadi orders.pesanan --}}
+                        <a href="{{ route('orders.pesanan') }}" class="block px-4 py-2 text-[10px] font-bold tracking-widest text-gray-700 hover:bg-gray-50 hover:text-black transition">PESANAN SAYA</a>
+                        
+                        <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-[10px] font-bold tracking-widest text-gray-700 hover:bg-gray-50 hover:text-black transition border-b border-gray-50">PENGATURAN</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left px-4 py-2 text-[10px] font-bold tracking-widest text-red-500 hover:bg-red-50 transition">KELUAR</button>
+                        </form>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" class="hover:text-gray-600 transition uppercase text-[10px] md:text-[11px] font-bold tracking-[0.1em]">AKUN</a>
+                @endauth
+            </div>
+            <button @click="searchOpen = true" class="hover:text-black transition p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </button>
+            <a href="{{ route('cart.index') }}" class="relative hover:text-black transition p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                <span class="absolute -top-0.5 -right-0.5 bg-black text-white text-[7px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
+                    {{ $cartCount ?? 0 }}
+                </span>
+            </a>
+        </div>
+    </div>
 
-                        <div x-show="userMenu" x-cloak
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             class="absolute right-0 top-[60px] w-48 bg-white border border-gray-100 shadow-xl py-2 z-50">
-                            
-                            <a href="{{ Auth::user()->role === 'admin' ? route('admin.dashboard') : route('home') }}" class="block px-4 py-2 text-[10px] font-bold tracking-widest text-gray-700 hover:bg-gray-50 hover:text-black transition">
-                                {{ Auth::user()->role === 'admin' ? 'DASHBOARD' : 'MY ORDERS' }}
-                            </a>
-                            
-                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-[10px] font-bold tracking-widest text-gray-700 hover:bg-gray-50 hover:text-black transition border-b border-gray-50">
-                                SETTINGS
-                            </a>
+    {{-- Mobile Menu --}}
+    <div x-show="mobileMenuOpen" x-cloak 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 -translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="lg:hidden fixed inset-x-0 top-[90px] bottom-0 bg-white z-40 border-t border-gray-100 overflow-y-auto px-6 py-8 flex flex-col justify-between">
+        <div class="space-y-6 text-[13px] font-medium uppercase tracking-[0.15em] text-gray-800">
+            <a href="{{ url('/shop?collection=new Artikel') }}" class="block py-2 border-b border-gray-50 hover:text-black">Artikel Terbaru</a>
+            <a href="{{ url('/shop?collection=Best in 2026') }}" class="block py-2 border-b border-gray-50 hover:text-black">Best Sellers</a>
+            <a href="{{ url('/shop?collection=all categories') }}" class="block py-2 border-b border-gray-50 hover:text-black">Semua Kategori</a>
+            <a href="{{ url('/shop') }}" class="block py-2 border-b border-gray-50 font-bold text-black">Lihat Semua Produk (Shop)</a>
+        </div>
+        <div class="mt-auto border-t border-gray-100 pt-6 space-y-4">
+            <p class="text-[10px] text-gray-400 tracking-[0.2em] uppercase italic">Koleksi Minimalis Modern &copy; 2026</p>
+        </div>
+    </div>
 
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2 text-[10px] font-bold tracking-widest text-red-500 hover:bg-red-50 transition">
-                                    LOGOUT
-                                </button>
-                            </form>
+    {{-- Search Overlay --}}
+    <div x-show="searchOpen" x-cloak class="fixed inset-0 bg-white z-[100] flex flex-col p-6 md:p-10" @keydown.escape.window="searchOpen = false">
+        <div class="flex justify-end">
+            <button @click="searchOpen = false" class="text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-bold py-2">Tutup [X]</button>
+        </div>
+        <div class="mt-12 md:mt-20 flex flex-col items-center flex-grow">
+            <form action="{{ url('/shop') }}" method="GET" class="w-full max-w-3xl text-center">
+                <input type="text" name="search" placeholder="CARI PRODUK..." x-model="searchQuery" @input.debounce.300ms="fetchSuggestions()"
+                       class="w-full text-2xl md:text-5xl font-light uppercase tracking-tighter border-b border-gray-200 py-4 md:py-6 outline-none focus:border-black transition text-center bg-transparent">
+                <p class="mt-4 text-[9px] md:text-[10px] text-gray-400 tracking-[0.15em] md:tracking-[0.2em]">TEKAN ENTER UNTUK MENCARI ATAU ESC UNTUK MENUTUP</p>
+            </form>
+            <div class="w-full max-w-2xl mt-8 md:mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto max-h-[55vh] pb-10">
+                <template x-for="item in suggestions" :key="item.id">
+                    <a :href="'/product/' + item.slug" class="flex items-center space-x-4 p-3 hover:bg-gray-50 transition border-b border-gray-50">
+                        <img :src="item.image_url" class="w-12 h-12 object-cover bg-gray-100 flex-shrink-0">
+                        <div class="text-left min-w-0">
+                            <p class="text-[11px] font-bold uppercase tracking-widest text-black truncate" x-text="item.name"></p>
+                            <p class="text-[10px] text-gray-400" x-text="'IDR ' + item.price"></p>
                         </div>
-                    @else
-                        <a href="{{ route('login') }}" class="hover:text-gray-600 transition uppercase text-[11px] font-bold tracking-[0.1em]">
-                            ACCOUNT
-                        </a>
-                    @endauth
-                </div>
-
-                <button @click="searchOpen = true" class="hover:text-black transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </button>
-                
-                <a href="{{ route('cart.index') }}" class="relative hover:text-black transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                    <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                        {{ $cartCount ?? 0 }}
-                    </span>
-                </a>
+                    </a>
+                </template>
             </div>
         </div>
+    </div>
+</header>
 
-        <div x-show="searchOpen" x-cloak class="fixed inset-0 bg-white z-[100] flex flex-col p-10" @keydown.escape.window="searchOpen = false">
-            <div class="flex justify-end">
-                <button @click="searchOpen = false" class="text-[11px] uppercase tracking-[0.2em] font-bold">Close [X]</button>
-            </div>
-            <div class="mt-20 flex flex-col items-center">
-                <form action="{{ url('/shop') }}" method="GET" class="w-full max-w-3xl text-center">
-                    <input type="text" name="search" placeholder="SEARCH PRODUCTS..." x-model="searchQuery" @input.debounce.300ms="fetchSuggestions()"
-                           class="w-full text-3xl md:text-5 elders-5xl font-light uppercase tracking-tighter border-b border-gray-100 py-6 outline-none focus:border-black transition text-center">
-                    <p class="mt-4 text-[10px] text-gray-400 tracking-[0.2em]">PRESS ENTER TO SEARCH OR ESCAPE TO CLOSE</p>
-                </form>
-                <div class="w-full max-w-2xl mt-10 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[50vh]">
-                    <template x-for="item in suggestions" :key="item.id">
-                        <a :href="'/product/' + item.slug" class="flex items-center space-x-4 p-3 hover:bg-gray-50 transition border-b border-gray-50">
-                            <img :src="item.image_url" class="w-12 h-12 object-cover bg-gray-100">
-                            <div class="text-left">
-                                <p class="text-[11px] font-bold uppercase tracking-widest text-black" x-text="item.name"></p>
-                                <p class="text-[10px] text-gray-400" x-text="'IDR ' + item.price"></p>
-                            </div>
-                        </a>
-                    </template>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-grow">
+    {{-- Konten Halaman Dinamis --}}
+    <main class="flex-grow w-full overflow-hidden">
         @yield('content')
     </main>
 
-    <footer class="bg-[#f2f2f2] pt-20 pb-10 border-t border-gray-200 mt-20">
-        <div class="max-w-[1400px] mx-auto px-10">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-                <div class="space-y-6">
-                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase">dress well, keep it simple</h4>
-                    <p class="text-[11px] text-gray-500 leading-relaxed font-light">
-                        since 2012, we’re committed to always give you a better daily-wear with timeless and minimalist design as our guide, either casual, semi-formal, or formal look, that you’ll love to wear anywhere and anytime.
+    {{-- Footer Responsif --}}
+    <footer class="bg-[#fcfcfc] pt-14 md:pt-24 pb-12 border-t border-gray-100 mt-14 md:mt-24 w-full">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-16 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-10 md:gap-8 mb-16 md:mb-24">
+                <div class="sm:col-span-2 md:col-span-6 space-y-4 md:space-y-6">
+                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase text-black">BERPAKAIAN BAIK, TETAP SEDERHANA</h4>
+                    <p class="text-[11px] text-gray-400 leading-relaxed font-light normal-case tracking-wide">
+                        Sejak 2012, kami berkomitmen untuk selalu memberikan pakaian sehari-hari yang lebih better dengan desain minimalis and abadi sebagai panduan kami. Baik penampilan kasual, semi-formal, maupun formal yang akan Anda senangi untuk dikenakan di mana saja dan kapan saja.
                     </p>
-                    <div class="pt-4">
-                    <p class="text-[9px] text-gray-400 leading-relaxed">
-                        Layanan Pengaduan Konsumen Direktorat Jenderal Perlindungan Konsumen dan Tertib Niaga Kementerian Perdagangan RI<br>
-                        Nomor Whatsapp Ditjen PKTN 
-                        <a href="https://wa.me/6285311111010" target="_blank" class="hover:text-black transition underline decoration-gray-300">
-                            0853-1111-1010
-                        </a>
-                    </p>
-                    </div>
-                    <div class="flex space-x-5 text-gray-600">
-                        <a href="https://www.instagram.com/yomonoid/" class="hover:text-black transition"><i class="fab fa-instagram"></i></a>
-                        <a href="https://www.tiktok.com/@yomonoid" class="hover:text-black transition"><i class="fab fa-tiktok"></i></a>
-                        <a href="https://shopee.co.id/yoihijab?entryPoint=ShopBySearch&searchKeyword=yomonoid" class="hover:text-black transition"><i class="fas fa-bag-shopping"></i></a>
+                    <div class="pt-1">
+                        <p class="text-[9px] text-gray-400 leading-relaxed normal-case">
+                            Layanan Pengaduan Konsumen Direktorat Jenderal Perlindungan Konsumen dan Tertib Niaga Kementerian Perdagangan RI<br>
+                            Nomor Whatsapp Ditjen PKTN 
+                            <a href="https://wa.me/6285311111010" target="_blank" class="hover:text-black text-gray-500 transition underline decoration-gray-300">
+                                0853-1111-1010
+                            </a>
+                        </p>
                     </div>
                 </div>
-
-                <div>
-                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-8">NEED HELP</h4>
-                    <ul class="space-y-4 text-[11px] text-gray-500 font-light">
-                        <li><a href="{{ route('login') }}" class="hover:text-black transition">Daftar Akun</a></li>
+                <div class="sm:col-span-1 md:col-span-3">
+                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-4 md:mb-6 text-black">BUTUH BANTUAN</h4>
+                    <ul class="space-y-2.5 md:space-y-3.5 text-[11px] text-gray-500 font-normal tracking-wide">
+                        <li><a href="{{ route('register') }}" class="hover:text-black transition">Daftar Akun</a></li>
                         <li><a href="{{ route('pages.faq') }}" class="hover:text-black transition">FAQ</a></li>
                         <li><a href="{{ route('pages.returns-shipping') }}" class="hover:text-black transition">Return & Shipping</a></li>
-                        <li><a href="{{ route('pages.how-to-purchase') }}" class="hover:text-black transition">How to Purchase</a></li>
-                        <li><a href="{{ route('pages.sizing-guide') }}" class="hover:text-black transition">Sizing Guide</a></li>
+                        <li><a href="{{ route('pages.how-to-purchase') }}" class="hover:text-black transition">Cara Pembelian</a></li>
+                        <li><a href="{{ route('pages.sizing-guide') }}" class="hover:text-black transition">Panduan Ukuran</a></li>
                     </ul>
                 </div>
-
-                <div>
-                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-8">ABOUT US</h4>
-                    <ul class="space-y-4 text-[11px] text-gray-500 font-light">
-                        <li><a href="{{ route('pages.career') }}" class="hover:text-black transition">join #yomonoteam</a></li>
-                        <li><a href="{{ route('pages.journal') }}" class="hover:text-black transition">journal #YOMONO</a></li>
+                <div class="sm:col-span-1 md:col-span-3">
+                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-4 md:mb-6 text-black">IKUTI KAMI</h4>
+                    <ul class="space-y-2.5 md:space-y-3.5 text-[11px] text-gray-500 font-normal tracking-wide">
+                        <li><a href="https://www.instagram.com/yomonoid/" target="_blank" class="hover:text-black transition">Instagram</a></li>
+                        <li><a href="https://www.tiktok.com/@yomonoid" target="_blank" class="hover:text-black transition">TikTok</a></li>
+                        <li><a href="https://shopee.co.id/yoihijab?entryPoint=ShopBySearch&searchKeyword=yomonoid" target="_blank" class="hover:text-black transition">Shopee</a></li>
                     </ul>
-                </div>
-
-                <div>
-                    <h4 class="text-[11px] font-bold tracking-[0.2em] uppercase mb-8">newsletter</h4>
-                    <p class="text-[11px] text-gray-500 mb-6 font-light">sign up to our newsletter and keep up to date with the latest arrivals</p>
-                    <form class="relative">
-                        <input type="email" placeholder="enter email" class="w-full py-3 footer-input text-[11px]">
-                        <button type="submit" class="absolute right-0 top-3 text-gray-400 hover:text-black transition">
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    </form>
                 </div>
             </div>
-
-            <div class="border-t border-gray-200 pt-10 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
-                <div class="text-[10px] text-gray-400 tracking-widest uppercase font-light">
-                    © 2026 YOMONO.ID
+            <div class="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+                <div class="text-[10px] text-gray-400 tracking-widest uppercase font-light text-center md:text-left">
+                    &copy; 2021 YOMONO.ID
                 </div>
-                
-                <div class="flex items-center space-x-4 grayscale opacity-50">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" class="h-3" alt="BCA">
-                    <img src="https://upload.wikimedia.org/wikipedia/id/f/fa/Bank_Mandiri_logo.svg" class="h-3" alt="Mandiri">
-                    <img src="https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg" class="h-3" alt="BNI">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" class="h-4" alt="Mastercard">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" class="h-3" alt="Visa">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/85/Gopay_logo.svg" class="h-3" alt="Gopay">
+                <div class="flex flex-wrap items-center justify-center gap-4 md:gap-6 grayscale opacity-40 mix-blend-multiply">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" class="h-3 md:h-3.5" alt="BCA">
+                    <img src="https://upload.wikimedia.org/wikipedia/id/f/fa/Bank_Mandiri_logo.svg" class="h-3 md:h-3.5" alt="Mandiri">
+                    <img src="https://i.pinimg.com/originals/36/38/43/36384348ef9d7bfff66da6da9e975d56.png" class="h-4 md:h-5" alt="BNI">
+                    <img src="https://i.pinimg.com/originals/f5/8c/a3/f58ca3528b238877e9855fcac1daa328.jpg" class="h-3.5 md:h-4" alt="Dana">
+                    <img src="https://images.seeklogo.com/logo-png/39/1/quick-response-code-indonesia-standard-qris-logo-png_seeklogo-391791.png" class="h-4 md:h-5" alt="Qris">
                 </div>
             </div>
         </div>
     </footer>
 
+    {{-- Alert Berhasil (Toast) --}}
     @if(session('success'))
         <div x-data="{ show: true }" 
              x-show="show" 
@@ -289,17 +291,18 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 translate-y-4"
-             class="fixed bottom-5 right-5 bg-black text-white px-6 py-4 z-[150] text-[10px] tracking-[0.2em] uppercase shadow-2xl border border-gray-800 flex items-center gap-3">
+             class="fixed bottom-5 right-5 left-5 sm:left-auto bg-black text-white px-6 py-4 z-[150] text-[10px] tracking-[0.2em] uppercase shadow-2xl border border-gray-800 flex items-center justify-center sm:justify-start gap-3">
             <i class="fas fa-check-circle text-white"></i>
             {{ session('success') }}
         </div>
     @endif
 
+    {{-- Alert Gagal (Toast) --}}
     @if(session('error'))
         <div x-data="{ show: true }" 
              x-show="show" 
              x-init="setTimeout(() => show = false, 4000)" 
-             class="fixed bottom-5 right-5 bg-red-600 text-white px-6 py-4 z-[150] text-[10px] tracking-[0.2em] uppercase shadow-2xl flex items-center gap-3">
+             class="fixed bottom-5 right-5 left-5 sm:left-auto bg-red-600 text-white px-6 py-4 z-[150] text-[10px] tracking-[0.2em] uppercase shadow-2xl flex items-center justify-center sm:justify-start gap-3">
             <i class="fas fa-exclamation-triangle"></i>
             {{ session('error') }}
         </div>
